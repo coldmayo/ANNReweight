@@ -2,17 +2,29 @@ import numpy as np
 from tqdm import tqdm
 
 class FNN:
-    def __init__(self, input_size, hidden_size, num_class):
-        self.w1 = np.zeros((input_size, hidden_size))
-        self.w2 = np.zeros((hidden_size, num_class))
+    def __init__(self, input_size, hidden_size, num_class, w1 = "None", w2 = "None"):
 
-        for i in range(input_size):
-            for j in range(hidden_size):
-                self.w1[i][j] = np.random.randn()
+        if isinstance(w1, str):
+            self.w1 = np.zeros((input_size, hidden_size))
 
-        for i in range(hidden_size):
-            for j in range(num_class):
-                self.w2[i][j] = np.random.randn()
+            for i in range(input_size):
+                for j in range(hidden_size):
+                    self.w1[i][j] = np.random.randn()
+        elif isinstance(w1, list):
+            self.w1 = np.array(w1)
+        elif isinstance(w1, np.ndarray):
+            self.w1 = w1
+
+        if isinstance(w1, str):
+            self.w2 = np.zeros((hidden_size, num_class))
+
+            for i in range(hidden_size):
+                for j in range(num_class):
+                    self.w2[i][j] = np.random.randn()
+        elif isinstance(w2, list):
+            self.w2 = np.array(w2)
+        elif isinstance(w2, np.ndarray):
+            self.w2 = w2
 
     def sigmoid(self, x):
         return 1/(1 + np.exp(-x))
@@ -89,6 +101,6 @@ class FNN:
             
         return acc, loss, self.w1, self.w2
 
-    def predict(self):
+    def predict(self, x):
         out = self.forward(x)
         return out
