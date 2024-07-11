@@ -6,24 +6,29 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import csv
 
-with open("../saved_models/FNNweights.json") as f:
-    weights = json.loads(f.read())
+def main():
 
-nn = ml.FNN(weights["input_size"], weights["hidden_size"], weights["num_class"], w1 = np.array(weights["w1"]), w2 = np.array(weights["w2"]), b1 = np.array(weights["b1"]), b2 = np.array(weights["b2"]))
+    with open("../saved_models/FNNweights.json") as f:
+        weights = json.loads(f.read())
 
-df = pd.read_csv('../data/data.csv')
+    nn = ml.FNN(weights["input_size"], weights["hidden_size"], weights["num_class"], w1 = np.array(weights["w1"]), w2 = np.array(weights["w2"]), b1 = np.array(weights["b1"]), b2 = np.array(weights["b2"]))
 
-newMC = []
-wei = []
-for i in tqdm(range(len(df["MC"]))):
-    out = nn.predict(np.array([df["MC"][i], df["MC_index"][i]]))
-    w = out[0]/out[1]
-    if w > 1:
-        w = 1
-    wei.append(w)
-    newMC.append(df["MC"][i]*w)
+    df = pd.read_csv('../data/data.csv')
 
-#print(newMC)
-plt.plot(newMC)
-plt.plot(df["RD"])
-plt.show()
+    newMC = []
+    wei = []
+    for i in tqdm(range(len(df["MC"]))):
+        out = nn.predict(np.array([df["MC"][i], df["MC_index"][i]]))
+        w = out[0]/out[1]
+        if w > 1:
+            w = 1
+        wei.append(w)
+        newMC.append(df["MC"][i]*w)
+
+    #print(newMC)
+    plt.plot(newMC)
+    plt.plot(df["RD"])
+    plt.show()
+
+if __name__ == "__main__":
+    main()
