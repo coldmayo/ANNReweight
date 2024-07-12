@@ -11,7 +11,7 @@ def main():
     with open("../saved_models/FNNweights.json") as f:
         weights = json.loads(f.read())
 
-    nn = ml.FNN(weights["input_size"], weights["hidden_size"], weights["num_class"], w1 = np.array(weights["w1"]), w2 = np.array(weights["w2"]), b1 = np.array(weights["b1"]), b2 = np.array(weights["b2"]))
+    nn = ml.FNN(weights["input_size"], weights["hidden_size"], weights["num_class"], w1 = np.array(weights["w1"]), w2 = np.array(weights["w2"]), w3 = np.array(weights["w3"]), w4 = np.array(weights["w4"]), b1 = np.array(weights["b1"]), b2 = np.array(weights["b2"]), b3 = np.array(weights["b3"]), b4 = np.array(weights["b4"]))
 
     df = pd.read_csv('../data/data.csv')
     
