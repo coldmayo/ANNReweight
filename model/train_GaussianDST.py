@@ -15,7 +15,7 @@ def main(argv, argc):
         epochs = 3
         
     #columns = ['hSPD', 'pt_b', 'pt_phi', 'vchi2_b', 'mu_pt_sum']
-    weights = {"w1":[], "w2":[], "b1":[], "b2":[], "input_size": 0, "hidden_size": 0, "num_class": 0}
+    weights = {"w1":[], "w2":[], "w3":[], "w4":[], "b1":[], "b2":[], "b3":[], "b4":[], "input_size": 0, "hidden_size": 0, "num_class": 0}
 
     # root data
 
@@ -71,12 +71,16 @@ def main(argv, argc):
     #df.to_csv("../data/data.csv")
     x = x.reshape((5000*2, 1))
     nn = ml.FNN(1, 5, 2)
-    acc, loss, weight1, weight2, bias1, bias2 = nn.train(x, y, epoch=epochs)
+    acc, loss, weight1, weight2, weight3, weight4, bias1, bias2, bias3, bias4 = nn.train(x, y, epoch=epochs)
 
     weights["w1"] = weight1.tolist()
     weights["w2"] = weight2.tolist()
+    weights["w3"] = weight3.tolist()
+    weights["w4"] = weight4.tolist()
     weights["b1"] = bias1.tolist()
     weights["b2"] = bias2.tolist()
+    weights["b3"] = bias3.tolist()
+    weights["b4"] = bias4.tolist()
     weights["input_size"] = 1
     weights["hidden_size"] = 5
     weights["num_class"] = 2

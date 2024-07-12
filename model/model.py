@@ -3,7 +3,7 @@ from tqdm import tqdm
 import pandas as pd
 
 class FNN:
-    def __init__(self, input_size, hidden_size, num_class, w1 = None, w2 = None, b1 = None, b2 = None):
+    def __init__(self, input_size, hidden_size, num_class, w1 = None, w2 = None, w3 = None, w4 = None, b1 = None, b2 = None, b3 = None, b4 = None):
         # set weights
         self.input_size = input_size
         if w1 is None:
@@ -19,16 +19,39 @@ class FNN:
             self.w1 = w1
 
         if w2 is None:
-            self.w2 = np.zeros((hidden_size, num_class))
+            self.w2 = np.zeros((hidden_size, hidden_size))
 
             for i in range(hidden_size):
-                for j in range(num_class):
+                for j in range(hidden_size):
                     self.w2[i][j] = np.random.randn()
-                    #self.w2[i][j] = 1
+                    #self.w1[i][j] = 1
         elif isinstance(w2, list):
             self.w2 = np.array(w2)
         elif isinstance(w2, np.ndarray):
             self.w2 = w2
+
+        if w3 is None:
+            self.w3 = np.zeros((hidden_size, hidden_size))
+
+            for i in range(hidden_size):
+                for j in range(hidden_size):
+                    self.w3[i][j] = np.random.randn()
+                    #self.w1[i][j] = 1
+        elif isinstance(w3, list):
+            self.w3 = np.array(w3)
+        elif isinstance(w3, np.ndarray):
+            self.w3 = w3
+
+        if w4 is None:
+            self.w4 = np.zeros((hidden_size, num_class))
+
+            for i in range(hidden_size):
+                for j in range(num_class):
+                    self.w4[i][j] = np.random.randn()
+        elif isinstance(w4, list):
+            self.w4 = np.array(w4)
+        elif isinstance(w4, np.ndarray):
+            self.w4 = w4
 
         # set biases
         if b1 is None:
@@ -37,13 +60,27 @@ class FNN:
             self.b1 = np.array(b1)
         else:
             self.b1 = b1
-
+            
         if b2 is None:
-            self.b2 = np.ones(num_class)
+            self.b2 = np.ones(hidden_size)
         elif isinstance(b2, list):
             self.b2 = np.array(b2)
         else:
             self.b2 = b2
+            
+        if b3 is None:
+            self.b3 = np.ones(hidden_size)
+        elif isinstance(b3, list):
+            self.b3 = np.array(b3)
+        else:
+            self.b3 = b3
+
+        if b4 is None:
+            self.b4 = np.ones(num_class)
+        elif isinstance(b4, list):
+            self.b4 = np.array(b4)
+        else:
+            self.b4 = b4
 
     def one_hot(self, y):
         y = pd.Series(y)
@@ -60,7 +97,13 @@ class FNN:
         z2 = np.dot(a1, self.w2) + self.b2
         a2 = self.sigmoid(z2)
 
-        return a2
+        z3 = np.dot(a2, self.w2) + self.b3
+        a3 = self.sigmoid(z3)
+
+        z4 = np.dot(a3, self.w4) + self.b4
+        a4 = self.sigmoid(z4)
+
+        return a4
 
     def backward(self, x, y, alpha):
         z1 = np.dot(x, self.w1) + self.b1
@@ -69,18 +112,35 @@ class FNN:
         z2 = np.dot(a1, self.w2) + self.b2
         a2 = self.sigmoid(z2)
 
-        d2 = a2-y
+        z3 = np.dot(a2, self.w2) + self.b3
+        a3 = self.sigmoid(z3)
+
+        z4 = np.dot(a3, self.w4) + self.b4
+        a4 = self.sigmoid(z4)
+
+        d4 = a4-y
+        d3 = np.multiply(np.dot(self.w4, d4.transpose()).transpose(), np.multiply(a3, 1-a3))
+        d2 = np.multiply(np.dot(self.w3, d3.transpose()).transpose(), np.multiply(a2, 1-a2))
         d1 = np.multiply(np.dot(self.w2, d2.transpose()).transpose(), np.multiply(a1, 1-a1))
+        
 
         w1_alt = x.transpose().dot(d1)
         w2_alt = a1.transpose().dot(d2)
+        w3_alt = a2.transpose().dot(d3)
+        w4_alt = a3.transpose().dot(d4)
         b1_alt = np.sum(d1, axis=0)
         b2_alt = np.sum(d2, axis=0)
+        b3_alt = np.sum(d3, axis=0)
+        b4_alt = np.sum(d4, axis=0)
 
         self.w1 = self.w1-(alpha*w1_alt)
         self.w2 = self.w2-(alpha*w2_alt)
+        self.w3 = self.w3-(alpha*w3_alt)
+        self.w4 = self.w4-(alpha*w4_alt)
         self.b1 = self.b1 - (alpha*b1_alt)
         self.b2 = self.b2 - (alpha*b2_alt)
+        self.b3 = self.b3 - (alpha*b3_alt)
+        self.b4 = self.b4 - (alpha*b4_alt)
 
     def loss(self, out, y):
         real = np.max(y)
@@ -128,7 +188,7 @@ class FNN:
             loss.append(sum(l)/len(x))
             print("epoch:", i, "accuracy:", acc[-1], "loss:", loss[-1])
             
-        return acc, loss, self.w1, self.w2, self.b1, self.b2
+        return acc, loss, self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4
 
     def predict(self, x):
         out = self.forward(x)
