@@ -19,17 +19,18 @@ def main():
     data = []
     for i in tqdm(range(len(df["X0"]))):
         out = nn.predict(np.array(df["X0"][i]))
-        w = out[0][0]/out[0][1]
+        w = out[0][1]/out[0][0]
         data.append(w*df["X0"][i])
         wei.append(w)
 
     #print(wei)
     bins = np.linspace(-6, 5, 31)
-    plt.hist(df["X0"], bins = bins, alpha = 0.5, label='0')
-    plt.hist(data, bins=bins, alpha = 0.5, label='1', color='k')
-    plt.hist(df["X1"], bins = bins, alpha = 0.5, label='2')
+    plt.hist(df["X0"], bins = bins, alpha = 0.5, label='Sample MC')
+    plt.hist(df["X0"], bins=bins, alpha = 0.5, label='Weighted MC', weights = wei, color='k')
+    plt.hist(df["X1"], bins = bins, alpha = 0.5, label="Sample 'Real Data'")
     plt.legend()
     plt.show()
+    plt.savefig("../output/weighted_dist.png")
 
 if __name__ == "__main__":
     main()

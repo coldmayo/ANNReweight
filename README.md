@@ -11,6 +11,8 @@ In this project, I will be reweighting Geant4 histograms using Machine Learning.
 	- This directory is created once the user trains their first model. Information about the trained model is stored here (weights, bias, etc)
 - useful_papers/
 	- Papers referenced for this project (helpful for writing references for a paper)
+- output/
+	- Shows the output of the model (loss function, reweighted plots, etc)
 
 ## Important Links
 Data:

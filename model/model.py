@@ -76,7 +76,7 @@ class FNN:
             self.b3 = b3
 
         if b4 is None:
-            self.b4 = np.ones(num_class)
+            self.b4 = np.random.randn(num_class)
         elif isinstance(b4, list):
             self.b4 = np.array(b4)
         else:
@@ -90,15 +90,21 @@ class FNN:
     def sigmoid(self, x):
         return 1/(1 + np.exp(-x))
 
+    def ReLU(self, x):
+        return np.maximum(0,x)
+
+    def dReLU(self, x):
+        return np.where(x > 0, 1, 0)
+
     def forward(self, x):
         z1 = np.dot(x, self.w1) + self.b1
-        a1 = self.sigmoid(z1)
+        a1 = self.ReLU(z1)
 
         z2 = np.dot(a1, self.w2) + self.b2
-        a2 = self.sigmoid(z2)
+        a2 = self.ReLU(z2)
 
         z3 = np.dot(a2, self.w2) + self.b3
-        a3 = self.sigmoid(z3)
+        a3 = self.ReLU(z3)
 
         z4 = np.dot(a3, self.w4) + self.b4
         a4 = self.sigmoid(z4)
@@ -106,41 +112,45 @@ class FNN:
         return a4
 
     def backward(self, x, y, alpha):
+
+        m = y.shape[0]
+        
         z1 = np.dot(x, self.w1) + self.b1
         a1 = self.sigmoid(z1)
 
         z2 = np.dot(a1, self.w2) + self.b2
         a2 = self.sigmoid(z2)
 
-        z3 = np.dot(a2, self.w2) + self.b3
+        z3 = np.dot(a2, self.w3) + self.b3
         a3 = self.sigmoid(z3)
 
         z4 = np.dot(a3, self.w4) + self.b4
         a4 = self.sigmoid(z4)
 
         d4 = a4-y
-        d3 = np.multiply(np.dot(self.w4, d4.transpose()).transpose(), np.multiply(a3, 1-a3))
-        d2 = np.multiply(np.dot(self.w3, d3.transpose()).transpose(), np.multiply(a2, 1-a2))
-        d1 = np.multiply(np.dot(self.w2, d2.transpose()).transpose(), np.multiply(a1, 1-a1))
+        d3 = np.dot(d4, self.w4.T) * self.dReLU(a3)
+        d2 = np.dot(d3, self.w3.T) * self.dReLU(a2)
+        d1 = np.dot(d2, self.w2.T) * self.dReLU(a1)
         
+        w1_alt = np.dot(x.T, d1) / m
+        w2_alt = np.dot(a1.T, d2) / m
+        w3_alt = np.dot(a2.T, d3) / m
+        w4_alt = np.dot(a3.T, d4) / m
 
-        w1_alt = x.transpose().dot(d1)
-        w2_alt = a1.transpose().dot(d2)
-        w3_alt = a2.transpose().dot(d3)
-        w4_alt = a3.transpose().dot(d4)
-        b1_alt = np.sum(d1, axis=0)
-        b2_alt = np.sum(d2, axis=0)
-        b3_alt = np.sum(d3, axis=0)
-        b4_alt = np.sum(d4, axis=0)
+        b1_alt = np.sum(d1, axis=0) / m
+        b2_alt = np.sum(d2, axis=0) / m
+        b3_alt = np.sum(d3, axis=0) / m
+        b4_alt = np.sum(d4, axis=0) / m
 
-        self.w1 = self.w1-(alpha*w1_alt)
-        self.w2 = self.w2-(alpha*w2_alt)
-        self.w3 = self.w3-(alpha*w3_alt)
-        self.w4 = self.w4-(alpha*w4_alt)
-        self.b1 = self.b1 - (alpha*b1_alt)
-        self.b2 = self.b2 - (alpha*b2_alt)
-        self.b3 = self.b3 - (alpha*b3_alt)
-        self.b4 = self.b4 - (alpha*b4_alt)
+        self.w1 -= alpha*w1_alt
+        self.w2 -= alpha*w2_alt
+        self.w3 -= alpha*w3_alt
+        self.w4 -= alpha*w4_alt
+
+        self.b1 -= alpha*b1_alt
+        self.b2 -= alpha*b2_alt
+        self.b3 -= alpha*b3_alt
+        self.b4 -= alpha*b4_alt
 
     def loss(self, out, y):
         real = np.max(y)

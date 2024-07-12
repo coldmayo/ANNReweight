@@ -17,51 +17,21 @@ def main(argv, argc):
     #columns = ['hSPD', 'pt_b', 'pt_phi', 'vchi2_b', 'mu_pt_sum']
     weights = {"w1":[], "w2":[], "w3":[], "w4":[], "b1":[], "b2":[], "b3":[], "b4":[], "input_size": 0, "hidden_size": 0, "num_class": 0}
 
-    # root data
-
-    #with uproot.open("../data/MC_distribution.root") as og_file:
-        #original_tree = og_file['tree']
-        #original = original_tree.arrays(library='pd')
-
-    #print(original)
-
-    #with uproot.open("../data/RD_distribution.root") as og_file:
-        #target_tree = og_file['tree']
-        #target = target_tree.arrays(library='pd')
-
-    #original['index'] = range(0, len(original))
-    #target['index'] = range(0, len(target))
-
-    #print(original)
-
-    #x = []
-    #y = []
-
-    #print("Start data processing")
-
-    #for i in range(len(original['index'])):
-        #x.append([original['hSPD'][i], original['index'][i]])
-        #y.append([0, 1])
-
-    #for i in range(len(target['index'])):
-        #x.append([target['hSPD'][i], target['index'][i]])
-        #y.append([1, 0])
-
-    #print("Done")
-
-    #df = pd.DataFrame(data={"MC":original['hSPD'], "MC_index":original["index"], 'RD':target['hSPD'], 'RD_index':target["index"],})
     print("Start Data collecting...")
     mu0 = 0
     mu1 = 1
     var0 = 1
     var1 = 1.3
-    X0 = np.random.normal(mu0, var0, 5000)
-    X1 = np.random.normal(mu1, var1, 5000)
-    plt.hist(X0)
-    plt.hist(X1)
-    plt.show()
-    Y0 = np.zeros(5000)
-    Y1 = np.ones(5000)
+    leng = 1000
+    X0 = np.random.normal(mu0, var0, int(leng/2))
+    X1 = np.random.normal(mu1, var1, int(leng/2))
+
+    #plt.hist(X0)
+    #plt.hist(X1)
+    #plt.show()
+
+    Y0 = np.zeros(int(leng/2))
+    Y1 = np.ones(int(leng/2))
     x = np.concatenate((X0, X1))
     y = np.concatenate((Y0, Y1))
     df = pd.DataFrame(data = {'X0':X0, 'Y0':Y0, 'X1':X1, 'Y1':Y1})
@@ -69,9 +39,17 @@ def main(argv, argc):
     print(x.shape)
     print("Got it!")
     #df.to_csv("../data/data.csv")
-    x = x.reshape((5000*2, 1))
-    nn = ml.FNN(1, 5, 2)
+    x = x.reshape((leng, 1))
+    nn = ml.FNN(1, 20, 2)
     acc, loss, weight1, weight2, weight3, weight4, bias1, bias2, bias3, bias4 = nn.train(x, y, epoch=epochs)
+
+    # create loss plots:
+    epochs = np.arange(len(loss))
+    plt.plot(epochs, loss)
+    plt.xlabel("Epochs")
+    plt.ylabel("Cross Entropy Loss")
+    plt.title("Loss Curve")
+    plt.savefig("../output/loss.png")
 
     weights["w1"] = weight1.tolist()
     weights["w2"] = weight2.tolist()
@@ -82,7 +60,7 @@ def main(argv, argc):
     weights["b3"] = bias3.tolist()
     weights["b4"] = bias4.tolist()
     weights["input_size"] = 1
-    weights["hidden_size"] = 5
+    weights["hidden_size"] = 20
     weights["num_class"] = 2
 
     with open("../saved_models/FNNweights.json", 'w') as f:
