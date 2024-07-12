@@ -12,6 +12,10 @@ In this project, I will be reweighting Geant4 histograms using Machine Learning.
 - useful_papers/
 	- Papers referenced for this project (helpful for writing references for a paper)
 
+## Important Links
+Data:
+- <a href="https://zenodo.org/records/3518708#.XbN4MJNKJOQ">Zenodo</a>
+
 ## Running the code
 ### Linux
 1. Create Virtual Envirement
@@ -39,6 +43,7 @@ $ pip install -r requirements.txt
 ```
 3. Run files
 ```bash
+$ .venv\Scripts\activate.bat
 $ cd model
 $ python -u train.py 10
 ```

@@ -14,20 +14,21 @@ def main():
     nn = ml.FNN(weights["input_size"], weights["hidden_size"], weights["num_class"], w1 = np.array(weights["w1"]), w2 = np.array(weights["w2"]), b1 = np.array(weights["b1"]), b2 = np.array(weights["b2"]))
 
     df = pd.read_csv('../data/data.csv')
-
-    newMC = []
+    
     wei = []
-    for i in tqdm(range(len(df["MC"]))):
-        out = nn.predict(np.array([df["MC"][i], df["MC_index"][i]]))
-        w = out[0]/out[1]
-        if w > 1:
-            w = 1
+    data = []
+    for i in tqdm(range(len(df["X0"]))):
+        out = nn.predict(np.array(df["X0"][i]))
+        w = out[0][0]/out[0][1]
+        data.append(w*df["X0"][i])
         wei.append(w)
-        newMC.append(df["MC"][i]*w)
 
-    #print(newMC)
-    plt.plot(newMC)
-    plt.plot(df["RD"])
+    #print(wei)
+    bins = np.linspace(-6, 5, 31)
+    plt.hist(df["X0"], bins = bins, alpha = 0.5, label='0')
+    plt.hist(data, bins=bins, alpha = 0.5, label='1', color='k')
+    plt.hist(df["X1"], bins = bins, alpha = 0.5, label='2')
+    plt.legend()
     plt.show()
 
 if __name__ == "__main__":
