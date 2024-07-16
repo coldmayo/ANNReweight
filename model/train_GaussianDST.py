@@ -22,7 +22,7 @@ def main(argv, argc):
     mu1 = 1
     var0 = 1
     var1 = 1.3
-    leng = 1000
+    leng = 100000
     X0 = np.random.normal(mu0, var0, int(leng/2))
     X1 = np.random.normal(mu1, var1, int(leng/2))
 

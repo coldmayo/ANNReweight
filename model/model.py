@@ -1,9 +1,14 @@
-import numpy as np
 from tqdm import tqdm
 import pandas as pd
+import random
+try:
+    import cupy as np
+except ImportError:
+    import numpy as np
 
 class FNN:
     def __init__(self, input_size, hidden_size, num_class, w1 = None, w2 = None, w3 = None, w4 = None, b1 = None, b2 = None, b3 = None, b4 = None):
+
         # set weights
         self.input_size = input_size
         if w1 is None:
@@ -11,7 +16,7 @@ class FNN:
 
             for i in range(input_size):
                 for j in range(hidden_size):
-                    self.w1[i][j] = np.random.randn()
+                    self.w1[i][j] = random.random()
                     #self.w1[i][j] = 1
         elif isinstance(w1, list):
             self.w1 = np.array(w1)
@@ -23,7 +28,7 @@ class FNN:
 
             for i in range(hidden_size):
                 for j in range(hidden_size):
-                    self.w2[i][j] = np.random.randn()
+                    self.w2[i][j] = random.random()
                     #self.w1[i][j] = 1
         elif isinstance(w2, list):
             self.w2 = np.array(w2)
@@ -35,7 +40,7 @@ class FNN:
 
             for i in range(hidden_size):
                 for j in range(hidden_size):
-                    self.w3[i][j] = np.random.randn()
+                    self.w3[i][j] = random.random()
                     #self.w1[i][j] = 1
         elif isinstance(w3, list):
             self.w3 = np.array(w3)
@@ -47,10 +52,10 @@ class FNN:
 
             for i in range(hidden_size):
                 for j in range(num_class):
-                    self.w4[i][j] = np.random.randn()
+                    self.w4[i][j] = random.random()
         elif isinstance(w4, list):
             self.w4 = np.array(w4)
-        elif isinstance(w4, np.ndarray):
+        elif isinstance(w4, ndarray):
             self.w4 = w4
 
         # set biases
@@ -76,7 +81,7 @@ class FNN:
             self.b3 = b3
 
         if b4 is None:
-            self.b4 = np.random.randn(num_class)
+            self.b4 = np.ones(num_class)
         elif isinstance(b4, list):
             self.b4 = np.array(b4)
         else:
