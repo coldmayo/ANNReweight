@@ -13,8 +13,7 @@ def main(argv, argc):
         epochs = int(argv[1])
     else:
         epochs = 3
-        
-    #columns = ['hSPD', 'pt_b', 'pt_phi', 'vchi2_b', 'mu_pt_sum']
+
     weights = {"w1":[], "w2":[], "w3":[], "w4":[], "b1":[], "b2":[], "b3":[], "b4":[], "input_size": 0, "hidden_size": 0, "num_class": 0}
 
     print("Start Data collecting...")
@@ -22,7 +21,7 @@ def main(argv, argc):
     mu1 = 1
     var0 = 1
     var1 = 1.3
-    leng = 100000
+    leng = 10**5
     X0 = np.random.normal(mu0, var0, int(leng/2))
     X1 = np.random.normal(mu1, var1, int(leng/2))
 
@@ -38,7 +37,6 @@ def main(argv, argc):
     df.to_csv("../data/data.csv")
     print(x.shape)
     print("Got it!")
-    #df.to_csv("../data/data.csv")
     x = x.reshape((leng, 1))
     nn = ml.FNN(1, 20, 2)
     acc, loss, weight1, weight2, weight3, weight4, bias1, bias2, bias3, bias4 = nn.train(x, y, epoch=epochs)

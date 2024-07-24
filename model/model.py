@@ -1,91 +1,47 @@
 from tqdm import tqdm
 import pandas as pd
 import random
+
+cupy = False
+
 try:
     import cupy as np
+    import numpy as np1
+    cupy = True
 except ImportError:
     import numpy as np
 
 class FNN:
     def __init__(self, input_size, hidden_size, num_class, w1 = None, w2 = None, w3 = None, w4 = None, b1 = None, b2 = None, b3 = None, b4 = None):
 
-        # set weights
         self.input_size = input_size
-        if w1 is None:
-            self.w1 = np.zeros((input_size, hidden_size))
 
-            for i in range(input_size):
-                for j in range(hidden_size):
-                    self.w1[i][j] = random.random()
-                    #self.w1[i][j] = 1
-        elif isinstance(w1, list):
+        # set weights
+        if w1 is None:
+            self.w1 = np.random.rand(input_size, hidden_size)
+        else:
             self.w1 = np.array(w1)
-        elif isinstance(w1, np.ndarray):
-            self.w1 = w1
 
         if w2 is None:
-            self.w2 = np.zeros((hidden_size, hidden_size))
-
-            for i in range(hidden_size):
-                for j in range(hidden_size):
-                    self.w2[i][j] = random.random()
-                    #self.w1[i][j] = 1
-        elif isinstance(w2, list):
+            self.w2 = np.random.rand(hidden_size, hidden_size)
+        else:
             self.w2 = np.array(w2)
-        elif isinstance(w2, np.ndarray):
-            self.w2 = w2
 
         if w3 is None:
-            self.w3 = np.zeros((hidden_size, hidden_size))
-
-            for i in range(hidden_size):
-                for j in range(hidden_size):
-                    self.w3[i][j] = random.random()
-                    #self.w1[i][j] = 1
-        elif isinstance(w3, list):
+            self.w3 = np.random.rand(hidden_size, hidden_size)
+        else:
             self.w3 = np.array(w3)
-        elif isinstance(w3, np.ndarray):
-            self.w3 = w3
 
         if w4 is None:
-            self.w4 = np.zeros((hidden_size, num_class))
-
-            for i in range(hidden_size):
-                for j in range(num_class):
-                    self.w4[i][j] = random.random()
-        elif isinstance(w4, list):
+            self.w4 = np.random.rand(hidden_size, num_class)
+        else:
             self.w4 = np.array(w4)
-        elif isinstance(w4, ndarray):
-            self.w4 = w4
 
         # set biases
-        if b1 is None:
-            self.b1 = np.ones(hidden_size)
-        elif isinstance(b1, list):
-            self.b1 = np.array(b1)
-        else:
-            self.b1 = b1
-            
-        if b2 is None:
-            self.b2 = np.ones(hidden_size)
-        elif isinstance(b2, list):
-            self.b2 = np.array(b2)
-        else:
-            self.b2 = b2
-            
-        if b3 is None:
-            self.b3 = np.ones(hidden_size)
-        elif isinstance(b3, list):
-            self.b3 = np.array(b3)
-        else:
-            self.b3 = b3
-
-        if b4 is None:
-            self.b4 = np.ones(num_class)
-        elif isinstance(b4, list):
-            self.b4 = np.array(b4)
-        else:
-            self.b4 = b4
+        self.b1 = np.ones(hidden_size) if b1 is None else np.array(b1)
+        self.b2 = np.ones(hidden_size) if b2 is None else np.array(b2)
+        self.b3 = np.ones(hidden_size) if b3 is None else np.array(b3)
+        self.b4 = np.ones(num_class) if b4 is None else np.array(b4)
 
     def one_hot(self, y):
         y = pd.Series(y)
@@ -121,13 +77,13 @@ class FNN:
         m = y.shape[0]
         
         z1 = np.dot(x, self.w1) + self.b1
-        a1 = self.sigmoid(z1)
+        a1 = self.ReLU(z1)
 
         z2 = np.dot(a1, self.w2) + self.b2
-        a2 = self.sigmoid(z2)
+        a2 = self.ReLU(z2)
 
         z3 = np.dot(a2, self.w3) + self.b3
-        a3 = self.sigmoid(z3)
+        a3 = self.ReLU(z3)
 
         z4 = np.dot(a3, self.w4) + self.b4
         a4 = self.sigmoid(z4)
@@ -158,18 +114,17 @@ class FNN:
         self.b4 -= alpha*b4_alt
 
     def loss(self, out, y):
-        real = np.max(y)
-        pred = np.max(out)
-        return -1*real*np.log(pred)
+        out = np.array(out)
+        y = np.array(y)
+        return -np.sum(y * np.log(out)) / y.shape[0]
 
     def accuracy(self, y, preds):
-        correct = 0
-        for i in range(len(y)):
-            if np.max(y[i]) == np.max(preds[i]):
-                correct += 1
-        return correct/len(y)
+        y = np.array(y)
+        preds = np.array(preds)
+        correct = np.sum(np.argmax(y, axis=1) == np.argmax(preds, axis=1))
+        return correct / len(y)
 
-    def train(self, x, y, alpha = 0.01, epoch = 10, x_max = None):
+    def train(self, x, y, alpha = 0.01, epoch = 10, batch_size = 1000, x_max = None):
         acc = []
         loss = []
         x = np.array(x)
@@ -193,18 +148,30 @@ class FNN:
                 x = x.reshape((x_max, self.input_size))
                 y = np.array(y)
 
-            for j in tqdm(range(len(x))):
-                out = self.forward(x[j])
+            for j in tqdm(range(0, len(x), batch_size)):
+                end = j + batch_size
+                data_batch = x[j:end]
+                label_batch = y[j:end]
+
+                out = self.forward(data_batch)
                 preds.append(out)
-                l.append(self.loss(out, y[j]))
-                self.backward(x, y, alpha)
+                l.append(self.loss(out, label_batch))
+                self.backward(data_batch, label_batch, alpha)
             
-            acc.append(self.accuracy(y, preds))
+            acc.append(self.accuracy(y, np.vstack(preds)))
             loss.append(sum(l)/len(x))
-            print("epoch:", i, "accuracy:", acc[-1], "loss:", loss[-1])
-            
-        return acc, loss, self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4
+            print("epoch:", i, "loss:", loss[-1])
+        y_preds = self.predict(x)
+        print("Model Accuracy: ", self.accuracy(y, y_preds))
+        if cupy == False:
+            return acc, loss, self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4
+        else:
+            loss = np.array(loss)
+            return acc, np.asnumpy(loss.get()), self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4
 
     def predict(self, x):
-        out = self.forward(x)
-        return out
+        out = self.forward(np.array(x))
+        if cupy == False:
+            return out
+        else:
+            return np.asnumpy(out.get())
