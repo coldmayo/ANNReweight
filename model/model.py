@@ -1,6 +1,7 @@
 from tqdm import tqdm
 import pandas as pd
 import random
+from Adam import *
 
 cupy = False
 
@@ -51,6 +52,9 @@ class FNN:
     def sigmoid(self, x):
         return 1/(1 + np.exp(-x))
 
+    def softmax(self, x):
+        return np.exp(x - np.max(x, axis=-1, keepdims=True)) / np.sum(np.exp(x - np.max(x, axis=-1, keepdims=True)), axis=-1, keepdims=True)
+
     def ReLU(self, x):
         return np.maximum(0,x)
 
@@ -68,14 +72,17 @@ class FNN:
         a3 = self.ReLU(z3)
 
         z4 = np.dot(a3, self.w4) + self.b4
-        a4 = self.sigmoid(z4)
+        a4 = self.softmax(z4)
 
         return a4
 
-    def backward(self, x, y, alpha):
+    def use_adam(self, adam, params, grads):
+        updated_params = adam.update(params, grads)
+        self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4 = updated_params
 
+    def backward(self, x, y):
         m = y.shape[0]
-        
+
         z1 = np.dot(x, self.w1) + self.b1
         a1 = self.ReLU(z1)
 
@@ -86,32 +93,24 @@ class FNN:
         a3 = self.ReLU(z3)
 
         z4 = np.dot(a3, self.w4) + self.b4
-        a4 = self.sigmoid(z4)
+        a4 = self.softmax(z4)
 
-        d4 = a4-y
+        d4 = a4 - y
         d3 = np.dot(d4, self.w4.T) * self.dReLU(a3)
         d2 = np.dot(d3, self.w3.T) * self.dReLU(a2)
         d1 = np.dot(d2, self.w2.T) * self.dReLU(a1)
-        
-        w1_alt = np.dot(x.T, d1) / m
-        w2_alt = np.dot(a1.T, d2) / m
-        w3_alt = np.dot(a2.T, d3) / m
-        w4_alt = np.dot(a3.T, d4) / m
 
-        b1_alt = np.sum(d1, axis=0) / m
-        b2_alt = np.sum(d2, axis=0) / m
-        b3_alt = np.sum(d3, axis=0) / m
-        b4_alt = np.sum(d4, axis=0) / m
+        dw4 = np.dot(a3.T, d4) / m
+        dw3 = np.dot(a2.T, d3) / m
+        dw2 = np.dot(a1.T, d2) / m
+        dw1 = np.dot(x.T, d1) / m
 
-        self.w1 -= alpha*w1_alt
-        self.w2 -= alpha*w2_alt
-        self.w3 -= alpha*w3_alt
-        self.w4 -= alpha*w4_alt
+        db4 = np.sum(d4, axis=0) / m
+        db3 = np.sum(d3, axis=0) / m
+        db2 = np.sum(d2, axis=0) / m
+        db1 = np.sum(d1, axis=0) / m
 
-        self.b1 -= alpha*b1_alt
-        self.b2 -= alpha*b2_alt
-        self.b3 -= alpha*b3_alt
-        self.b4 -= alpha*b4_alt
+        return [dw1, dw2, dw3, dw4], [db1, db2, db3, db4]
 
     def loss(self, out, y):
         out = np.array(out)
@@ -130,6 +129,7 @@ class FNN:
         x = np.array(x)
         y = self.one_hot(y)
         print("Start Training: ")
+        adam = AdamOptimizer()
         for i in range(epoch):
             l = []
             preds = []
@@ -156,8 +156,12 @@ class FNN:
                 out = self.forward(data_batch)
                 preds.append(out)
                 l.append(self.loss(out, label_batch))
-                self.backward(data_batch, label_batch, alpha)
-            
+                w_grads, b_grads = self.backward(data_batch, label_batch)
+                params = [self.w1, self.w2, self.w3, self.w4]
+                params += [self.b1, self.b2, self.b3, self.b4]
+                grads = w_grads + b_grads
+                self.use_adam(adam, params, grads)
+
             acc.append(self.accuracy(y, np.vstack(preds)))
             loss.append(sum(l)/len(x))
             print("epoch:", i, "loss:", loss[-1])

@@ -22,24 +22,25 @@ def main(argv, argc):
     var0 = 1
     var1 = 1.3
     leng = 10**5
-    X0 = np.random.normal(mu0, var0, int(leng/2))
-    X1 = np.random.normal(mu1, var1, int(leng/2))
+    X0 = np.random.normal(mu0, var0, leng)
+    X1 = np.random.normal(mu1, var1, leng)
 
     #plt.hist(X0)
     #plt.hist(X1)
     #plt.show()
 
-    Y0 = np.zeros(int(leng/2))
-    Y1 = np.ones(int(leng/2))
+    Y0 = np.zeros(leng)
+    Y1 = np.ones(leng)
     x = np.concatenate((X0, X1))
     y = np.concatenate((Y0, Y1))
-    df = pd.DataFrame(data = {'X0':X0, 'Y0':Y0, 'X1':X1, 'Y1':Y1})
-    df.to_csv("../data/data.csv")
-    print(x.shape)
+    X_train, X_test, Y_train, Y_test = train_test_split(x, y, test_size=0.2)
+    #df = pd.DataFrame(data = {'X0':X0, 'Y0':Y0, 'X1':X1, 'Y1':Y1})
+    #df.to_csv("../data/data.csv")
+    #print(x.shape)
     print("Got it!")
-    x = x.reshape((leng, 1))
+    X_train = X_train.reshape((160000, 1))
     nn = ml.FNN(1, 20, 2)
-    acc, loss, weight1, weight2, weight3, weight4, bias1, bias2, bias3, bias4 = nn.train(x, y, epoch=epochs)
+    acc, loss, weight1, weight2, weight3, weight4, bias1, bias2, bias3, bias4 = nn.train(X_train, Y_train, epoch=epochs, batch_size=1000)
 
     # create loss plots:
     epochs = np.arange(len(loss))

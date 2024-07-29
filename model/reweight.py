@@ -31,17 +31,23 @@ def main():
         b4=b4
     )
 
-    df = pd.read_csv('../data/data.csv')
+    #df = pd.read_csv('../data/data.csv')
 
-    x_data = df["X0"].values.reshape(-1, 1)
+    #x_data = df["X0"].values.reshape(-1, 1)
+    mu0 = 0
+    mu1 = 1
+    var0 = 1
+    var1 = 1.3
+    X0_val = np.random.normal(mu0, var0, 10**5)
+    X1_val = np.random.normal(mu1, var1, 10**5)
 
-    preds = nn.predict(x_data)
-    wei = preds[:, 0] / preds[:, 1]
+    preds = nn.predict(X0_val.reshape((10**5, 1)))
+    wei = (preds[:, 1]) / (preds[:, 0])
 
     bins = np.linspace(-6, 5, 31)
-    plt.hist(df["X0"], bins=bins, alpha=0.5, label='Sample MC')
-    plt.hist(df["X0"], bins=bins, alpha=0.5, weights=wei, label='Weighted MC', color='k')
-    plt.hist(df["X1"], bins=bins, alpha=0.5, label="Sample 'Real Data'")
+    plt.hist(X0_val, bins=bins, alpha=0.5, label='Sample MC')
+    plt.hist(X0_val, bins=bins, alpha=0.5, weights=wei, label='Weighted MC', color='k')
+    plt.hist(X1_val, bins=bins, alpha=0.5, label="Sample 'Real Data'")
     plt.legend()
     plt.savefig("../output/weighted_dist.png")
     plt.show()
