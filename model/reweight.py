@@ -43,11 +43,13 @@ def main():
 
     preds = nn.predict(X0_val.reshape((10**5, 1)))
     wei = (preds[:, 1]) / (preds[:, 0])
+    print(preds)
+    print(wei)
 
-    bins = np.linspace(-6, 5, 31)
-    plt.hist(X0_val, bins=bins, alpha=0.5, label='Sample MC')
-    plt.hist(X0_val, bins=bins, alpha=0.5, weights=wei, label='Weighted MC', color='k')
-    plt.hist(X1_val, bins=bins, alpha=0.5, label="Sample 'Real Data'")
+    bins = np.linspace(-6,5,31)
+    plt.hist(X0_val, bins = bins, alpha = 0.5, label = r'$\mu=0$')
+    plt.hist(X0_val, bins = bins, label = r'$\mu=0$ weighted', weights=wei, histtype='step', color='k')
+    plt.hist(X1_val, bins = bins, alpha = 0.5, label = r'$\mu=1$')
     plt.legend()
     plt.savefig("../output/weighted_dist.png")
     plt.show()

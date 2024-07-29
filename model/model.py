@@ -18,31 +18,20 @@ class FNN:
         self.input_size = input_size
 
         # set weights
-        if w1 is None:
-            self.w1 = np.random.rand(input_size, hidden_size)
-        else:
-            self.w1 = np.array(w1)
-
-        if w2 is None:
-            self.w2 = np.random.rand(hidden_size, hidden_size)
-        else:
-            self.w2 = np.array(w2)
-
-        if w3 is None:
-            self.w3 = np.random.rand(hidden_size, hidden_size)
-        else:
-            self.w3 = np.array(w3)
-
-        if w4 is None:
-            self.w4 = np.random.rand(hidden_size, num_class)
-        else:
-            self.w4 = np.array(w4)
+        self.w1 = self.he_init(input_size, hidden_size) if w1 is None else np.array(w1)
+        self.w2 = self.he_init(hidden_size, hidden_size) if w2 is None else np.array(w2)
+        self.w3 = self.he_init(hidden_size, hidden_size) if w3 is None else np.array(w3)
+        self.w4 = self.he_init(hidden_size, num_class) if w4 is None else np.array(w4)
 
         # set biases
-        self.b1 = np.ones(hidden_size) if b1 is None else np.array(b1)
-        self.b2 = np.ones(hidden_size) if b2 is None else np.array(b2)
-        self.b3 = np.ones(hidden_size) if b3 is None else np.array(b3)
-        self.b4 = np.ones(num_class) if b4 is None else np.array(b4)
+        self.b1 = np.random.randint(0, 1, size=(hidden_size)) if b1 is None else np.array(b1)
+        self.b2 = np.random.randint(0, 1, size=(hidden_size)) if b2 is None else np.array(b2)
+        self.b3 = np.random.randint(0, 1, size=(hidden_size)) if b3 is None else np.array(b3)
+        self.b4 = np.random.randint(0, 1, size=(num_class)) if b4 is None else np.array(b4)
+
+    def he_init(self, n_in, n_out):
+        stddev = np.sqrt(2 / n_in)
+        return np.random.randn(n_in, n_out) * stddev
 
     def one_hot(self, y):
         y = pd.Series(y)
@@ -53,7 +42,8 @@ class FNN:
         return 1/(1 + np.exp(-x))
 
     def softmax(self, x):
-        return np.exp(x - np.max(x, axis=-1, keepdims=True)) / np.sum(np.exp(x - np.max(x, axis=-1, keepdims=True)), axis=-1, keepdims=True)
+        soft = np.exp(x)/np.sum(np.exp(x))
+        return soft
 
     def ReLU(self, x):
         return np.maximum(0,x)
@@ -76,11 +66,7 @@ class FNN:
 
         return a4
 
-    def use_adam(self, adam, params, grads):
-        updated_params = adam.update(params, grads)
-        self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4 = updated_params
-
-    def backward(self, x, y):
+    def backward(self, adam, x, y):
         m = y.shape[0]
 
         z1 = np.dot(x, self.w1) + self.b1
@@ -110,7 +96,8 @@ class FNN:
         db2 = np.sum(d2, axis=0) / m
         db1 = np.sum(d1, axis=0) / m
 
-        return [dw1, dw2, dw3, dw4], [db1, db2, db3, db4]
+        updated_params = adam.update([self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4], [dw1, dw2, dw3, dw4, db1, db2, db3, db4])
+        self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4 = updated_params
 
     def loss(self, out, y):
         out = np.array(out)
@@ -156,11 +143,7 @@ class FNN:
                 out = self.forward(data_batch)
                 preds.append(out)
                 l.append(self.loss(out, label_batch))
-                w_grads, b_grads = self.backward(data_batch, label_batch)
-                params = [self.w1, self.w2, self.w3, self.w4]
-                params += [self.b1, self.b2, self.b3, self.b4]
-                grads = w_grads + b_grads
-                self.use_adam(adam, params, grads)
+                self.backward(adam, data_batch, label_batch)
 
             acc.append(self.accuracy(y, np.vstack(preds)))
             loss.append(sum(l)/len(x))
