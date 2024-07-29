@@ -24,10 +24,10 @@ class FNN:
         self.w4 = self.he_init(hidden_size, num_class) if w4 is None else np.array(w4)
 
         # set biases
-        self.b1 = np.random.randint(0, 1, size=(hidden_size)) if b1 is None else np.array(b1)
-        self.b2 = np.random.randint(0, 1, size=(hidden_size)) if b2 is None else np.array(b2)
-        self.b3 = np.random.randint(0, 1, size=(hidden_size)) if b3 is None else np.array(b3)
-        self.b4 = np.random.randint(0, 1, size=(num_class)) if b4 is None else np.array(b4)
+        self.b1 = np.zeros(input_size) if b1 is None else np.array(b1)
+        self.b2 = np.zeros(hidden_size) if b2 is None else np.array(b2)
+        self.b3 = np.zeros(hidden_size) if b3 is None else np.array(b3)
+        self.b4 = np.zeros(num_class) if b4 is None else np.array(b4)
 
     def he_init(self, n_in, n_out):
         stddev = np.sqrt(2 / n_in)
@@ -42,8 +42,8 @@ class FNN:
         return 1/(1 + np.exp(-x))
 
     def softmax(self, x):
-        soft = np.exp(x)/np.sum(np.exp(x))
-        return soft
+        e_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+        return e_x / np.sum(e_x, axis=-1, keepdims=True)
 
     def ReLU(self, x):
         return np.maximum(0,x)
@@ -58,7 +58,7 @@ class FNN:
         z2 = np.dot(a1, self.w2) + self.b2
         a2 = self.ReLU(z2)
 
-        z3 = np.dot(a2, self.w2) + self.b3
+        z3 = np.dot(a2, self.w3) + self.b3
         a3 = self.ReLU(z3)
 
         z4 = np.dot(a3, self.w4) + self.b4
@@ -95,12 +95,11 @@ class FNN:
         db3 = np.sum(d3, axis=0) / m
         db2 = np.sum(d2, axis=0) / m
         db1 = np.sum(d1, axis=0) / m
-
         updated_params = adam.update([self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4], [dw1, dw2, dw3, dw4, db1, db2, db3, db4])
         self.w1, self.w2, self.w3, self.w4, self.b1, self.b2, self.b3, self.b4 = updated_params
 
     def loss(self, out, y):
-        out = np.array(out)
+        out = np.clip(out, 1e-8, 1 - 1e-8)  # Clip values to avoid log(0)
         y = np.array(y)
         return -np.sum(y * np.log(out)) / y.shape[0]
 
@@ -110,7 +109,7 @@ class FNN:
         correct = np.sum(np.argmax(y, axis=1) == np.argmax(preds, axis=1))
         return correct / len(y)
 
-    def train(self, x, y, alpha = 0.01, epoch = 10, batch_size = 1000, x_max = None):
+    def train(self, x, y, epoch = 10, batch_size = 1000, x_max = None):
         acc = []
         loss = []
         x = np.array(x)
