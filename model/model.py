@@ -2,6 +2,7 @@ from tqdm import tqdm
 import pandas as pd
 import random
 from Adam import *
+#from utils import *
 
 cupy = False
 
@@ -50,7 +51,7 @@ class FNN:
 
     def dReLU(self, x):
         return np.where(x > 0, 1, 0)
-
+    
     def forward(self, x):
         z1 = np.dot(x, self.w1) + self.b1
         a1 = self.ReLU(z1)
