@@ -26,9 +26,6 @@ def main(argv, argc):
     data = np.load("../data/3D_train.npz", mmap_mode='r')
     X = data['X']
     Y = data['Y']
-    indices = np.random.choice(X.shape[0], 10**5, replace=False)
-    X = X[indices]
-    Y = Y[indices]
 
     X = preprocess_data(X)
     print("Data Loaded")
@@ -45,7 +42,7 @@ def main(argv, argc):
     print(Y_val.shape)
 
     nn = ml.PFN()
-    acc, loss, f_wei, f_bias, phi_wei, phi_bias = nn.train(X_train, Y_train, epoch=epochs, batch_size=1000)
+    acc, loss, f_wei, f_bias, phi_wei, phi_bias = nn.train(X_train, Y_train, epoch=epochs, batch_size=1000, x_max=10**5)
 
     epochs = np.arange(len(loss))
     if cupy:

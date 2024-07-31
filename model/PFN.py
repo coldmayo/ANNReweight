@@ -176,7 +176,7 @@ class PFN:
         else:
             return np.asnumpy(out.get())
 
-    def train(self, x, y, epoch = 10, batch_size = 1000):
+    def train(self, x, y, epoch = 10, batch_size = 1000, x_max = None):
         acc = []
         loss = []
         x = np.array(x)
@@ -188,6 +188,13 @@ class PFN:
         for i in range(epoch):
             l = []
             preds = []
+            if x_max is not None:
+                
+                indices = np.random.choice(x.shape[0], x_max, replace=False)
+                x = x[indices]
+                y = y[indices]
+
+
             for j in tqdm(range(0, len(x), batch_size)):
                 end = j + batch_size
                 data_batch = x[j:end]
