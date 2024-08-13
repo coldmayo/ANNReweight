@@ -17,8 +17,9 @@ your-password123456   # form it should be in
 
 Transfer needed files into it (do this from a different terminal window):
 ```bash
-$ scp -r ANNReweight/data your-username@perlmutter.nersc.gov:/global/homes/c/your-username
-$ scp -r ANNReweight/model your-username@perlmutter.nersc.gov:/global/homes/c/your-username
+$ scp -r ANNReweight/data your-username@perlmutter.nersc.gov:/global/homes/c/your-username   # import the data
+$ scp -r ANNReweight/model your-username@perlmutter.nersc.gov:/global/homes/c/your-username   # import model files
+$ scp ANNReweight/run_PFN.slurm your-username@perlmutter.nersc.gov:/global/homes/c/your-username/model   # import the slurm file and save it to model directory
 ```
 
 Set up Python Envirement (in nersc terminal):
@@ -29,7 +30,8 @@ $ source venv/bin/activate   # activate venv
 $ pip install matplotlib numpy tqdm pandas cupy-cuda117   # install some needed packages
 ```
 
-Run python scripts, for example:
+Submit a job:
 ```bash
-python -u train_PFN.py 50
+dos2unix run_PFN.slurm   # doesn't like my newlines
+sbatch run_PFN.slurm   # submit job
 ```

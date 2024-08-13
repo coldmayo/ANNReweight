@@ -42,7 +42,7 @@ def main(argv, argc):
     print(Y_val.shape)
 
     nn = ml.PFN()
-    acc, loss, f_wei, f_bias, phi_wei, phi_bias = nn.train(X_train, Y_train, epoch=epochs, batch_size=1000, x_max=10**5)
+    acc, loss, f_wei, f_bias, phi_wei, phi_bias = nn.train(X_train, Y_train, epoch=epochs, batch_size=1000)
 
     epochs = np.arange(len(loss))
     if cupy:
